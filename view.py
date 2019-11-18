@@ -114,7 +114,7 @@ class ParticleSizeSlider(QtWidgets.QSlider):
         self.particle = None
 
 
-class MyWidget(QtWidgets.QWidget):
+class MainWidget(QtWidgets.QWidget):
     def _buildInsrumentLayout(self):
         insrumentLayout = QtWidgets.QVBoxLayout()
         spawn_button = QtWidgets.QPushButton("Spawn particle")
@@ -179,12 +179,3 @@ class MyWidget(QtWidgets.QWidget):
         self.layout.addLayout(self._buildInsrumentLayout())
 
         self.setLayout(self.layout)
-
-if __name__ == "__main__":
-    app = QtWidgets.QApplication([])
-
-    widget = MyWidget()
-    widget.resize(800, 600)
-    widget.show()
-
-    sys.exit(app.exec_())
