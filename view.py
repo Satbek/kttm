@@ -47,8 +47,9 @@ class Emitter(QtWidgets.QGraphicsEllipseItem):
         self.particle_speed_x = 0
         self.particle_speed_y = 0
         self.double_validator = QtGui.QDoubleValidator(
-            -1000000000000.0, 100000000000.0, 3
+            -10**9, 10**9, 3
         )
+        self.particle_life_time = 10
 
     QtCore.pyqtSlot(int)
     def setVector(self, degree):
@@ -68,6 +69,11 @@ class Emitter(QtWidgets.QGraphicsEllipseItem):
     def setParticleSpeedY(self, speed_y):
         if self.double_validator.validate(speed_y, 0)[0] == QtGui.QValidator.Acceptable:
             self.particle_speed_y = float(speed_y.replace(",", "."))
+
+    QtCore.pyqtSlot(float)
+    def setParticleLifeTime(self, life_time):
+        if self.double_validator.validate(life_time, 0)[0] == QtGui.QValidator.Acceptable:
+            self.particle_life_time = float(life_time.replace(",", "."))
 
 class Particle(QtWidgets.QGraphicsEllipseItem):
     def __init__(self, radius):
@@ -120,7 +126,7 @@ class MainWidget(QtWidgets.QWidget):
         layout.addWidget(self.particle_size_slider)
 
         double_validator = QtGui.QDoubleValidator(
-            -1000000000000.0, 100000000000.0, 3
+            -10**9, 10**9, 3
         )
         self.particle_speed_x_line_edit = QtWidgets.QLineEdit()
         self.particle_speed_x_line_edit.setValidator(double_validator)
@@ -132,6 +138,12 @@ class MainWidget(QtWidgets.QWidget):
 
         layout.addWidget(self.particle_speed_x_line_edit)
         layout.addWidget(self.particle_speed_y_line_edit)
+
+        self.particle_life_time_line_edit = QtWidgets.QLineEdit()
+        self.particle_life_time_line_edit.setValidator(double_validator)
+        self.particle_life_time_line_edit.setText("10.0")
+
+        layout.addWidget(self.particle_life_time_line_edit)
         return layout
 
     def buildInsrumentLayout(self):
@@ -179,6 +191,10 @@ class MainWidget(QtWidgets.QWidget):
 
         self.particle_speed_y_line_edit.textChanged.connect(
             self.view.emitter.setParticleSpeedY
+        )
+
+        self.particle_life_time_line_edit.textChanged.connect(
+            self.view.emitter.setParticleLifeTime
         )
 
     def __init__(self):
