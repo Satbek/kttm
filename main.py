@@ -17,7 +17,7 @@ class MainWindow(QtWidgets.QMainWindow):
         vercleAction = QtWidgets.QAction('Verle', methodsGroup, checkable=True)
         odintAction = QtWidgets.QAction('ODINT', methodsGroup, checkable=True)
         methodMenu.addAction(vercleAction)
-        methodMenu.addAction(odintAction)        
+        methodMenu.addAction(odintAction)
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
