@@ -1,23 +1,12 @@
 import numpy as np
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-#todo via Qt transform
 class Arrow(QtWidgets.QGraphicsLineItem):
     def __init__(self, x, y, radius, degree):
         self.radius = radius
         self.start = QtCore.QPointF(x, y)
         rad = np.deg2rad(degree)
         super().__init__(
-            x + radius * np.sin(rad),
-            y + radius * np.cos(rad),
-            x + 3 * radius * np.sin(rad),
-            y + 3 * radius * np.cos(rad)
-        )
-
-    def setVector(self, degree):
-        rad = np.deg2rad(degree)
-        x, y, radius = self.start.x(), self.start.y(), self.radius
-        self.setLine(
             x + radius * np.sin(rad),
             y + radius * np.cos(rad),
             x + 3 * radius * np.sin(rad),
@@ -49,26 +38,21 @@ class Emitter(QtWidgets.QGraphicsEllipseItem):
         )
         self.particle_life_time = 10
 
-    QtCore.pyqtSlot(int)
     def setVector(self, degree):
         self.degree = degree
-        self.arrow.setVector(degree)
+        self.arrow.setRotation(degree)
 
-    QtCore.pyqtSlot(float)
     def setParticleMass(self, mass):
         self.particleMass = mass
 
-    QtCore.pyqtSlot(float)
     def setParticleSpeedX(self, speed_x):
         if self.double_validator.validate(speed_x, 0)[0] == QtGui.QValidator.Acceptable:
             self.particle_speed_x = float(speed_x.replace(",", "."))
 
-    QtCore.pyqtSlot(float)
     def setParticleSpeedY(self, speed_y):
         if self.double_validator.validate(speed_y, 0)[0] == QtGui.QValidator.Acceptable:
             self.particle_speed_y = float(speed_y.replace(",", "."))
 
-    QtCore.pyqtSlot(float)
     def setParticleLifeTime(self, life_time):
         if self.double_validator.validate(life_time, 0)[0] == QtGui.QValidator.Acceptable:
             self.particle_life_time = float(life_time.replace(",", "."))
@@ -93,7 +77,6 @@ class UniverseView(QtWidgets.QGraphicsView):
     def mass2radius(mass):
         return mass
 
-    QtCore.pyqtSlot()
     def addParticle(self):
         particle = Particle(self.mass2radius(self.emitter.particleMass))
         distance = np.random.randint(*self.emitter.spawnInterval)
