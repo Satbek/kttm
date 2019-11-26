@@ -13,15 +13,13 @@ class MainWidget(QtWidgets.QWidget):
         layout = QtWidgets.QHBoxLayout()
         layout.addWidget(self.emitter_vector_slider)
 
-        self.particle_size_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
-        self.particle_size_slider.setRange(10, 100)
-        self.particle_size_slider.setTickInterval(1)
-        self.particle_size_slider.setSingleStep(1)
-        layout.addWidget(self.particle_size_slider)
-
         double_validator = QtGui.QDoubleValidator(
             -10**9, 10**9, 3
         )
+        self.particle_mass_line_edit = QtWidgets.QLineEdit()
+        self.particle_mass_line_edit.setValidator(double_validator)
+        self.particle_mass_line_edit.setText("10000000")
+
         self.particle_speed_x_line_edit = QtWidgets.QLineEdit()
         self.particle_speed_x_line_edit.setValidator(double_validator)
         self.particle_speed_x_line_edit.setText("0,0")
@@ -30,6 +28,7 @@ class MainWidget(QtWidgets.QWidget):
         self.particle_speed_y_line_edit.setValidator(double_validator)
         self.particle_speed_y_line_edit.setText("0,0")
 
+        layout.addWidget(self.particle_mass_line_edit)
         layout.addWidget(self.particle_speed_x_line_edit)
         layout.addWidget(self.particle_speed_y_line_edit)
 
@@ -46,9 +45,13 @@ class MainWidget(QtWidgets.QWidget):
         self.spawn_particle_button = QtWidgets.QPushButton("Spawn particle")
         self.animation_start_button = QtWidgets.QPushButton("Start")
         self.animation_stop_button = QtWidgets.QPushButton("Stop")
+        self.solar_system_button = QtWidgets.QPushButton("Solar System")
+        self.clear_button = QtWidgets.QPushButton("Clear")
         insrumentLayout.addWidget(self.spawn_particle_button)
         insrumentLayout.addWidget(self.animation_start_button)
         insrumentLayout.addWidget(self.animation_stop_button)
+        insrumentLayout.addWidget(self.clear_button)
+        insrumentLayout.addWidget(self.solar_system_button)
         return insrumentLayout
 
     def buildView(self):
@@ -67,12 +70,12 @@ class MainWidget(QtWidgets.QWidget):
             self.view.emitter.setVector
         )
 
-        self.particle_size_slider.valueChanged.connect(
+        self.particle_mass_line_edit.textChanged.connect(
             self.view.emitter.setParticleMass
         )
 
         self.spawn_particle_button.clicked.connect(
-            self.view.addParticle
+            self.view.spawnParticle
         )
 
         self.particle_speed_x_line_edit.textChanged.connect(
@@ -89,6 +92,14 @@ class MainWidget(QtWidgets.QWidget):
 
         self.particle_life_time_line_edit.textChanged.connect(
             self.view.emitter.setParticleLifeTime
+        )
+
+        self.solar_system_button.clicked.connect(
+            self.view.addSolarSystem
+        )
+
+        self.clear_button.clicked.connect(
+            self.view.clear
         )
 
     def __init__(self):
