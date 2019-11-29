@@ -1,4 +1,5 @@
 import numpy as np
+import queue
 np.seterr('raise')
 class Particle():
     def __init__(self, x, y,
@@ -11,8 +12,8 @@ class Particle():
         self.life_time = life_time
 
     def __repr__(self):
-        return "Particle[x = {x}, y = {y}, mass = {mass}, speed_x = {speed_x},\
-speed_y = {speed_y}, life_time = {life_time}]".format(
+        return "Particle:|x = {x}, y = {y}, mass = {mass}, speed_x = {speed_x},\
+speed_y = {speed_y}, life_time = {life_time}|".format(
         x = self.x,
         y = self.y,
         mass = self.mass,
@@ -75,7 +76,7 @@ class VerleSimpleSolver(AbstractSolver):
 
     #todo cycles to numpy
     def solve(self, particles, time_interval):
-        scenes_count = int(time_interval // self.time_step)
+        scenes_count = int(time_interval / self.time_step)
         result = []
         for scene_num in range(scenes_count):
             result.append([])
