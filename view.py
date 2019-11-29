@@ -34,7 +34,7 @@ class MainWidget(QtWidgets.QWidget):
 
         self.particle_life_time_line_edit = QtWidgets.QLineEdit()
         self.particle_life_time_line_edit.setValidator(double_validator)
-        self.particle_life_time_line_edit.setText("10.0")
+        self.particle_life_time_line_edit.setText("10,0")
 
         layout.addWidget(self.particle_life_time_line_edit)
         return layout
@@ -44,12 +44,12 @@ class MainWidget(QtWidgets.QWidget):
         insrumentLayout.addLayout(self.buildEmitterLayout())
         self.spawn_particle_button = QtWidgets.QPushButton("Spawn particle")
         self.animation_start_button = QtWidgets.QPushButton("Start")
-        self.animation_stop_button = QtWidgets.QPushButton("Stop")
+        self.animation_pause_button = QtWidgets.QPushButton("Pause")
         self.solar_system_button = QtWidgets.QPushButton("Solar System")
         self.clear_button = QtWidgets.QPushButton("Clear")
         insrumentLayout.addWidget(self.spawn_particle_button)
         insrumentLayout.addWidget(self.animation_start_button)
-        insrumentLayout.addWidget(self.animation_stop_button)
+        insrumentLayout.addWidget(self.animation_pause_button)
         insrumentLayout.addWidget(self.clear_button)
         insrumentLayout.addWidget(self.solar_system_button)
         return insrumentLayout
@@ -94,12 +94,20 @@ class MainWidget(QtWidgets.QWidget):
             self.view.emitter.setParticleLifeTime
         )
 
-        self.solar_system_button.clicked.connect(
-            self.view.addSolarSystem
-        )
+        # self.solar_system_button.clicked.connect(
+        #     self.view.addSolarSystem
+        # )
 
         self.clear_button.clicked.connect(
             self.view.clear
+        )
+
+        self.animation_start_button.clicked.connect(
+            self.view.startAnimation
+        )
+
+        self.animation_pause_button.clicked.connect(
+            self.view.pauseAnimation
         )
 
     def __init__(self):
