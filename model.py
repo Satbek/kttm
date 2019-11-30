@@ -1,5 +1,5 @@
 import numpy as np
-import queue
+from scipy.integrate import odeint
 np.seterr('raise')
 class Particle():
     def __init__(self, x, y,
@@ -21,7 +21,6 @@ speed_y = {speed_y}, life_time = {life_time}|".format(
         speed_y = self.speed_y,
         life_time = self.life_time
     )
-
 
 class AbstractSolver():
     """
@@ -69,21 +68,27 @@ class AbstractSolver():
         """
         raise("Not Implemented")
 
+    def _get_times(self, time_interval):
+        """
+        returns the scene times
+        """
+        return np.arange(0, time_interval, self.time_step)
 
 class VerleSimpleSolver(AbstractSolver):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, time_step, G = 6.6743015 * (10 ** -11)):
+        super().__init__(time_step, G)
 
     #todo cycles to numpy
     def solve(self, particles, time_interval):
-        scenes_count = int(time_interval / self.time_step)
+        t = self._get_times(time_interval)
+        scenes_count = len(t) - 1
         result = []
         for scene_num in range(scenes_count):
             result.append([])
-            for p in particles:
+            for i, p in enumerate(particles):
                 new_particle = Particle(
                     p.x, p.y, p.mass, p.speed_x, p.speed_y,
-                    p.life_time - (scene_num + 1) * self.time_step
+                    p.life_time - t[scene_num + 1]
                 )
                 result[scene_num].append(new_particle)
         result = [particles] + result
@@ -123,3 +128,35 @@ class VerleCythonSolver(AbstractSolver):
 class VerleOpenCLSolver(AbstractSolver):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+class OdeintSolver(AbstractSolver):
+    def __init__(self, time_step, G = 6.6743015 * (10 ** -11)):
+        super().__init__(time_step, G)
+
+    def pend(self, y, t, index, particles):
+        _, _, speed_x, speed_y = y
+        accs = self._getAccelerations(particles)[index]
+        return [speed_x, speed_y, accs[0], accs[1]]
+    
+    def solve(self, particles, time_interval):
+        number_scenes = [0] * len(particles)
+        t = self._get_times(time_interval)
+        for i, particle in enumerate(particles):
+            y0 = [particle.x, particle.y, particle.speed_x, particle.speed_y]
+            sol = odeint(self.pend, y0, t, args=(i, particles))
+            number_scenes[i] = np.array(sol)
+        number_scenes = np.array(number_scenes)
+        particle_scenes = []
+
+        for i, scene in enumerate(number_scenes):
+            particle_scenes.append([])
+            for j, p in enumerate(scene):
+                particle_scenes[i].append(Particle(
+                    x = p[0],
+                    y = p[1],
+                    speed_x = p[2],
+                    speed_y = p[3],
+                    mass = particles[i].mass,
+                    life_time = particles[i].life_time - t[j]
+                ))
+        return [list(p) for p in zip(*particle_scenes)]

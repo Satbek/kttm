@@ -10,14 +10,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.initMenu()
 
     def initMenu(self):
+        methodsGroup =  QtWidgets.QActionGroup(self)
+        methodsGroup.triggered.connect(self.centralWidget().view.setSolver)
+
+        verleAction = QtWidgets.QAction('Simple Verle', methodsGroup, checkable=True)
+        odeintAction = QtWidgets.QAction('ODEINT', methodsGroup, checkable=True)
+        verleAction.setStatusTip('Verle algotithm based solver')
+        odeintAction.setStatusTip('scipy.integrate.odeint based solver')
+        verleAction.setChecked(True)
+
         menu = self.menuBar()
         menu.setNativeMenuBar(False)
         methodMenu = menu.addMenu("Method")
-        methodsGroup =  QtWidgets.QActionGroup(self)
-        vercleAction = QtWidgets.QAction('Verle', methodsGroup, checkable=True)
-        odintAction = QtWidgets.QAction('ODINT', methodsGroup, checkable=True)
-        methodMenu.addAction(vercleAction)
-        methodMenu.addAction(odintAction)
+        methodMenu.addAction(verleAction)
+        methodMenu.addAction(odeintAction)
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
