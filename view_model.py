@@ -95,8 +95,8 @@ class ParticleProcessor(QtCore.QThread):
     def run(self):
         curr_particles = self.q_in.get()
         while True:
-            result = self.solver.solve(curr_particles, self.time_interval)
-            if len(result[0]) > 0:
+            if len(curr_particles) > 0:
+                result = self.solver.solve(curr_particles, self.time_interval)
                 self.send_particles_signal.emit(result)
             curr_particles = self.q_in.get()
 
@@ -106,6 +106,9 @@ class UniverseView(QtWidgets.QGraphicsView):
         self.emitter = Emitter(10, 0, (10, 40))
         self.q_in_particles = queue.Queue()
         self.scene().addItem(self.emitter)
+        self.time_step = 0.1
+        self.time_interval = 1
+        self.solver = model.VerleSimpleSolver(time_step = self.time_step)
         self._setup()
 
     def _setup(self):
@@ -113,10 +116,8 @@ class UniverseView(QtWidgets.QGraphicsView):
         self.anim_group = QtCore.QSequentialAnimationGroup()
         self.anim_group.finished.connect(self.resetAnimation)
         self.anim_group.setLoopCount(1)
-        self.time_step = 0.1
-        self.time_interval = 1
         self.particle_processor = ParticleProcessor(
-            solver = model.VerleSimpleSolver(time_step = self.time_step),
+            solver = self.solver,
             time_interval = self.time_interval,
             q_in = self.q_in_particles,
         )
@@ -219,3 +220,19 @@ class UniverseView(QtWidgets.QGraphicsView):
         self.anim_group = None
         self.particle_processor.quit()
         self._setup()
+
+    def setSolver(self, action):
+        solver_name = action.text()
+        logging.info("Set {0} solver".format(solver_name))
+        if solver_name == "Simple Verle":
+            self.solver = model.VerleSimpleSolver(time_step = self.time_step)
+        elif solver_name == "ODEINT":
+            self.solver = model.OdeintSolver(time_step = self.time_step)
+        self.particle_processor.quit()
+        self.particle_processor = ParticleProcessor(
+            solver = self.solver,
+            time_interval = self.time_interval,
+            q_in = self.q_in_particles,
+        )
+        self.particle_processor.start()
+        self.particle_processor.send_particles_signal.connect(self.applyAnimation)
