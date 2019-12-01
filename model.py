@@ -93,21 +93,19 @@ class VerleSimpleSolver(AbstractSolver):
                 result[scene_num].append(new_particle)
         result = [particles] + result
         for scene_num, _ in enumerate(result[:-1]):
-            current_particles = result[scene_num - 1]
+            current_particles = result[scene_num]
             current_accelerations = self._getAccelerations(current_particles)
             for i, p in enumerate(current_particles):
                 result[scene_num + 1][i].x = p.x + p.speed_x * self.time_step \
                     + 0.5 * current_accelerations[i][0] * self.time_step
-
                 result[scene_num + 1][i].y = p.y + p.speed_y * self.time_step \
                     + 0.5 * current_accelerations[i][1] * self.time_step
 
-            future_accelerations = self._getAccelerations(result[scene_num])
+            future_accelerations = self._getAccelerations(result[scene_num + 1])
             for i, p in enumerate(current_particles):
                 result[scene_num + 1][i].speed_x = p.speed_x + 0.5 * \
                     (future_accelerations[i][0] + current_accelerations[i][0]) * \
                     self.time_step
-
                 result[scene_num + 1][i].speed_y = p.speed_y + 0.5 * \
                     (future_accelerations[i][1] + current_accelerations[i][1]) * \
                     self.time_step
