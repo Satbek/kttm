@@ -94,9 +94,9 @@ class MainWidget(QtWidgets.QWidget):
             self.view.emitter.setParticleLifeTime
         )
 
-        # self.solar_system_button.clicked.connect(
-        #     self.view.addSolarSystem
-        # )
+        self.solar_system_button.clicked.connect(
+            self.view.addSolarSystem
+        )
 
         self.clear_button.clicked.connect(
             self.view.clear
