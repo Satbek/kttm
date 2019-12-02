@@ -47,12 +47,13 @@ class AbstractSolver():
                 if j != i:
                     delta_x = p_j.x - p_i.x
                     delta_y = p_j.y - p_i.y
+                    distance = [delta_x, delta_y]
                     if delta_x != 0:
                         res[i][0] += \
-                            self.G * p_j.mass * delta_x / np.abs(delta_x)**3
+                            self.G * p_j.mass * delta_x / np.linalg.norm(distance)**3
                     if delta_y != 0:
                         res[i][1] += \
-                            self.G * p_j.mass * delta_y / np.abs(delta_y)**3
+                            self.G * p_j.mass * delta_y /np.linalg.norm(distance)**3
         return res
 
     def solve(self, particles, time_interval):
