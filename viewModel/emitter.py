@@ -29,7 +29,7 @@ class Emitter(QtWidgets.QGraphicsEllipseItem):
         )
         self.radius = radius
         self.degree = degree
-        self.spawnInterval = spawnInterval
+        self.spawnInterval = np.array(spawnInterval)
         self.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable, True)
         self.arrow = Arrow(self.x(), self.y(), radius, degree)
         self.arrow.setParentItem(self)
@@ -41,6 +41,7 @@ class Emitter(QtWidgets.QGraphicsEllipseItem):
         )
         self.particle_life_time = 10
         self.setBrush(QtGui.QBrush(QtCore.Qt.red))
+        self.setZValue(1)
 
     def setVector(self, degree):
         logging.info("Rotate emitter vector, degree: {0}".format(degree))
