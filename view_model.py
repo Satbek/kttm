@@ -10,31 +10,32 @@ logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=loggin
 from PyQt5.QtCore import (QObject, QPointF, 
         QPropertyAnimation, pyqtProperty)
 import queue
+from viewModel.solar_system import getSolarSystem
 
 class UniverseView(QtWidgets.QGraphicsView):
     def __init__(self, scene):
         super().__init__(scene)
+        self.setup()
+
+    def setup(self):
         self.emitter = Emitter(10, 0, (10, 40))
         self.q_in_particles = queue.Queue()
         self.scene().addItem(self.emitter)
-        self.time_step = 10**4
-        self.time_interval = 10**5
+        self.time_step = 0.1
+        self.time_interval = 1
+        self.anim_time = self.time_step * 10 **3
         self.solver = model.VerleSimpleSolver(time_step = self.time_step)
         self.scale_factor = 1
-        self._setup()
-
-    def _setup(self):
         self.particles = []
-        self.anim_group = QtCore.QSequentialAnimationGroup()
-        self.anim_group.finished.connect(self.resetAnimation)
-        self.anim_group.setLoopCount(1)
         self.particle_processor = ParticleProcessor(
             solver = self.solver,
             time_interval = self.time_interval,
             q_in = self.q_in_particles,
         )
-        self.particle_processor.start()
         self.particle_processor.send_particles_signal.connect(self.applyAnimation)
+        self.anim_group = QtCore.QSequentialAnimationGroup()
+        self.anim_group.finished.connect(self.resetAnimation)
+        self.anim_group.setLoopCount(1)
 
     @staticmethod
     def mass2radius(mass):
@@ -66,8 +67,25 @@ class UniverseView(QtWidgets.QGraphicsView):
         logging.info("Spawning particle with pos ({0},{1})".format(x, y))
         self.addParticle(particle)
 
+    def _scale_by_particle_radius(self, particle_radius):
+        width = self.scene().itemsBoundingRect().width()
+        height = self.scene().itemsBoundingRect().height()
+        if particle_radius > width or particle_radius > height:
+            logging.info(
+                "Rescale view by particle: particle_radius = {0}, width = {1}, height = {2}".format(
+                    particle_radius,
+                    width,
+                    height
+                )
+            )
+            scale_step = 2.5 / particle_radius
+            self.scale_factor *= scale_step
+            self.scale(scale_step, scale_step)
+            self.emitter.setScale(1 / self.scale_factor)
+
     def addParticle(self, particle):
         self.particles.append(particle)
+        self._scale_by_particle_radius(particle.radius)
         self.scene().addItem(particle.item)
 
     def startAnimation(self):
@@ -78,6 +96,9 @@ class UniverseView(QtWidgets.QGraphicsView):
     def pauseAnimation(self):
         self.anim_group.pause()
         self.particle_processor.quit()
+
+    def moveEmitterToCenter(self):
+        self.emitter.setPos(self.mapToScene(self.viewport().rect().center()))
 
     def applyAnimation(self, particle_scenes):
         logging.info(
@@ -97,7 +118,7 @@ class UniverseView(QtWidgets.QGraphicsView):
             for j, v in enumerate(zip(particles_scene, self.particles)):
                 model, particle = v
                 particle_anim = QtCore.QPropertyAnimation(particle, b"pos")
-                particle_anim.setDuration(self.time_step * 10 **-3)
+                particle_anim.setDuration(self.anim_time)
                 particle_anim.setStartValue(QPointF(model.x, model.y))
                 particle_anim.setEndValue(
                     QPointF(
@@ -128,10 +149,33 @@ class UniverseView(QtWidgets.QGraphicsView):
     def clear(self):
         for p in self.particles:
             self.scene().removeItem(p.item)
+        self.particles = []
         self.anim_group.stop()
-        self.anim_group = None
+        if self.scale_factor != 1:
+            self.scale(1 / self.scale_factor, 1 / self.scale_factor)
+            self.emitter.setScale(1)
+            logging.info("Reset scaling, scale_factor = {0}, scene_width = {1}, scene_height = {2}".format(
+                self.scale_factor,
+                self.scene().width(),
+                self.scene().height()
+            ))
+            self.scale_factor = 1
+        self.centerOn(self.emitter)
+        self.setDefaultTimeParams()
+        self.restartParticleProcessor()
+
+    def setDefaultTimeParams(self):
+        self.time_step = 0.1
+        self.time_interval = 1
+        self.anim_time = self.time_step * 10 **3
+        self.solver.time_step = self.time_step
+
+    def restartParticleProcessor(self):
         self.particle_processor.quit()
-        self._setup()
+        self.particle_processor.solver = self.solver
+        self.particle_processor.time_interval = self.time_interval
+        self.particle_processor.q_in = self.q_in_particles
+        self.particle_processor.start()
 
     def setSolver(self, action):
         solver_name = action.text()
@@ -140,153 +184,15 @@ class UniverseView(QtWidgets.QGraphicsView):
             self.solver = model.VerleSimpleSolver(time_step = self.time_step)
         elif solver_name == "ODEINT":
             self.solver = model.OdeintSolver(time_step = self.time_step)
-        self.particle_processor.quit()
-        self.particle_processor = ParticleProcessor(
-            solver = self.solver,
-            time_interval = self.time_interval,
-            q_in = self.q_in_particles,
-        )
-        self.particle_processor.start()
-        self.particle_processor.send_particles_signal.connect(self.applyAnimation)
+        self.restartParticleProcessor()
 
     def addSolarSystem(self):
         self.clear()
-        #sun
-        self.scale_factor = 9 * 10**-10
-        self.addParticle(
-            Particle(
-                radius = 2 * 10 ** 10,
-                model = model.Particle(
-                    x = 0,
-                    y = 0,
-                    mass = 1990000000000000000000000000000,
-                    speed_x=0,
-                    speed_y=0,
-                    life_time=np.inf,
-                )
-            )
-        )
-
-        #Merkury
-        self.addParticle(
-            Particle(
-                radius = 0.5 * 10 ** 10,
-                model = model.Particle(
-                    x = 58000000000.0,
-                    y = 0,
-                    life_time = np.inf,
-                    speed_x = 0,
-                    speed_y = 48000,
-                    mass = 3.3e23,
-                )
-            )
-        )
-
-        #Venus
-        self.addParticle(
-            Particle(
-                radius = 0.5 * 10 ** 10,
-                model = model.Particle(
-                    x = 108000000000.0,
-                    y = 0,
-                    life_time = np.inf,
-                    speed_x = 0,
-                    speed_y = 35000,
-                    mass = 4.87e24,
-                )
-            )
-        )
-
-        #Earth
-        self.addParticle(
-            Particle(
-                radius = 0.5 * 10 ** 10,
-                model = model.Particle(
-                    x = 150000000000.0,
-                    y = 0,
-                    life_time = np.inf,
-                    speed_x = 0,
-                    speed_y = 30000,
-                    mass = 5.98e24,
-                )
-            )
-        )
-
-        #Mars
-        self.addParticle(
-            Particle(
-                radius = 0.5 * 10 ** 10,
-                model = model.Particle(
-                    x = 228000000000.0,
-                    y = 0,
-                    life_time = np.inf,
-                    speed_x = 0,
-                    speed_y = 24000,
-                    mass = 6.42e23,
-                )
-            )
-        )
-
-        #Jupyter
-        self.addParticle(
-            Particle(
-                radius = 0.5 * 10 ** 10,
-                model = model.Particle(
-                    x = 778000000000.0,
-                    y = 0,
-                    life_time = np.inf,
-                    speed_x = 0,
-                    speed_y = 13000,
-                    mass = 1.8999999999999998e27,
-                )
-            )
-        )
-
-        #Saturn
-        self.addParticle(
-            Particle(
-                radius = 0.5 * 10 ** 10,
-                model = model.Particle(
-                    x = 1427000000000.0,
-                    y = 0,
-                    life_time = np.inf,
-                    speed_x = 0,
-                    speed_y = 9600,
-                    mass = 5.69e26,
-                )
-            )
-        )
-
-        #Uranus
-        self.addParticle(
-            Particle(
-                radius = 0.5 * 10 ** 10,
-                model = model.Particle(
-                    x = 2870000000000.0,
-                    y = 0,
-                    life_time = np.inf,
-                    speed_x = 0,
-                    speed_y = 6800,
-                    mass = 8.68e25,
-                )
-            )
-        )
-
-        #Neptune
-        self.addParticle(
-            Particle(
-                radius = 0.5 * 10 ** 10,
-                model = model.Particle(
-                    x = 4497000000000.0,
-                    y = 0,
-                    life_time = np.inf,
-                    speed_x = 0,
-                    speed_y = 5400,
-                    mass = 1.0199999999999999e26,
-                )
-            )
-        )
-
-        self.scale(self.scale_factor, self.scale_factor)
-        self.emitter.setScale(1 / self.scale_factor)
-        self.emitter.setPos(0, 100)
+        self.time_step = 10**4
+        self.time_interval = 10**5
+        self.anim_time = self.time_step * 10 ** -3
+        self.solver.time_step = self.time_step
+        heavenly_bodies = getSolarSystem()
+        for heavenly_body in heavenly_bodies.values():
+            self.addParticle(heavenly_body)
+        self.restartParticleProcessor()

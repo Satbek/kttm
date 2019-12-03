@@ -47,11 +47,13 @@ class MainWidget(QtWidgets.QWidget):
         self.animation_pause_button = QtWidgets.QPushButton("Pause")
         self.solar_system_button = QtWidgets.QPushButton("Solar System")
         self.clear_button = QtWidgets.QPushButton("Clear")
+        self.move_emitter_button = QtWidgets.QPushButton("Move Emitter at center")
         insrumentLayout.addWidget(self.spawn_particle_button)
         insrumentLayout.addWidget(self.animation_start_button)
         insrumentLayout.addWidget(self.animation_pause_button)
         insrumentLayout.addWidget(self.clear_button)
         insrumentLayout.addWidget(self.solar_system_button)
+        insrumentLayout.addWidget(self.move_emitter_button)
         return insrumentLayout
 
     def buildView(self):
@@ -108,6 +110,10 @@ class MainWidget(QtWidgets.QWidget):
 
         self.animation_pause_button.clicked.connect(
             self.view.pauseAnimation
+        )
+
+        self.move_emitter_button.clicked.connect(
+            self.view.moveEmitterToCenter
         )
 
     def __init__(self):
