@@ -54,15 +54,16 @@ class UniverseView(QtWidgets.QGraphicsView):
                 self.emitter.radius + distance
             ) * np.cos(np.deg2rad(self.emitter.degree))
         particle = Particle(
-            self.mass2radius(self.emitter.particleMass),
-            model.Particle(
+            radius = self.mass2radius(self.emitter.particleMass),
+            model = model.Particle(
                 x,
                 y,
                 self.emitter.particleMass,
                 self.emitter.particle_speed_x,
                 self.emitter.particle_speed_y,
                 self.emitter.particle_life_time
-            )
+            ),
+            color = self.emitter.particle_color
         )
         logging.info("Spawning particle with pos ({0},{1})".format(x, y))
         self.addParticle(particle)

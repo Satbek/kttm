@@ -37,7 +37,16 @@ class MainWidget(QtWidgets.QWidget):
         self.particle_life_time_line_edit.setText("10,0")
 
         layout.addWidget(self.particle_life_time_line_edit)
+
+        self.select_color_button = QtWidgets.QPushButton('select color')
+        self.select_color_button.clicked.connect(self.showColorDialog)
+        self.color_dialog =  QtWidgets.QColorDialog()
+        self.color_dialog.setCurrentColor(QtGui.QColor("black"))
+        layout.addWidget(self.select_color_button)
         return layout
+
+    def showColorDialog(self):
+        self.color_dialog.show()
 
     def buildInsrumentLayout(self):
         insrumentLayout = QtWidgets.QVBoxLayout()
@@ -114,6 +123,10 @@ class MainWidget(QtWidgets.QWidget):
 
         self.move_emitter_button.clicked.connect(
             self.view.moveEmitterToCenter
+        )
+
+        self.color_dialog.colorSelected.connect(
+            self.view.emitter.setParicleColor
         )
 
     def __init__(self):

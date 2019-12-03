@@ -42,6 +42,7 @@ class Emitter(QtWidgets.QGraphicsEllipseItem):
         self.particle_life_time = 10
         self.setBrush(QtGui.QBrush(QtCore.Qt.red))
         self.setZValue(1)
+        self.particle_color = QtGui.QColor("black")
 
     def setVector(self, degree):
         logging.info("Rotate emitter vector, degree: {0}".format(degree))
@@ -63,3 +64,6 @@ class Emitter(QtWidgets.QGraphicsEllipseItem):
     def setParticleLifeTime(self, life_time):
         if self.double_validator.validate(life_time, 0)[0] == QtGui.QValidator.Acceptable:
             self.particle_life_time = float(life_time.replace(",", "."))
+
+    def setParicleColor(self, color):
+        self.particle_color = color
